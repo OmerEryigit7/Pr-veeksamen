@@ -1,0 +1,56 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+#header {
+    background-color: rgb(0, 0, 0, 0.23);
+    width: 100vw;
+    background-size: 100vw;
+    height: 7vh;
+    display: flex;
+
+    flex-flow: row;
+}
+
+#logo {
+    width: 10vw;
+    height: 7vh;
+    margin-left: 0px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+#navbar {
+    width: 60vw;
+    margin-left: 15vw;
+    margin-right: 15vw; 
+    height: 7vh;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#login-container {
+    width: 24vw;
+    text-align: center;
+}
+
+#login-form {
+    display: flex;
+    flex-flow: column;
+    text-align: left;
+}
+
+#main-content {
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+}
+
+#login-button {
+    background-color: rgb(0, 0, 0, 0.23);
+    border-radius: 1vw;
+}
