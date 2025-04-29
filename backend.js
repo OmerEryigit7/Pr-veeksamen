@@ -24,6 +24,19 @@ app.get('/adminpanel', (req, res) => {
   res.sendFile(path.join(__dirname,('static/admin.html')))
 })
 
+app.get('/backend.js', (req, res) => {
+  res.sendFile(path.join(__dirname,('frontend.js')))
+})
+
+app.get('/mine_utlaan', (req, res) => {
+  res.sendFile(path.join(__dirname,('static/my_loans.html')))
+})
+
+app.get('/administrer_brukere', (req, res) => {
+  res.sendFile(path.join(__dirname,('static/administer_users.html')))
+})
+
+
 let database = mysql.createConnection({
   host: process.env.HOST,
   user: process.env.SQLUSER,
@@ -72,7 +85,7 @@ app.post('/login', (req, res) => {
     }
 
       const bruker = results[0]
-      const isMatch = await bcrypt.compare(Passord, bruker.Passord)
+      const isMatch = await bcrypt.compare(Passord, bruker.passord)
 
 
     if (!isMatch) {

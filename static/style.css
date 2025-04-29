@@ -38,7 +38,7 @@
     text-align: center;
 }
 
-#login-form {
+#flex-flow-column {
     display: flex;
     flex-flow: column;
     text-align: left;
