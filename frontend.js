@@ -1,5 +1,8 @@
 const loginButton = document.getElementById('login-button')
-loginButton.addEventListener('click', login)
+if (loginButton) {
+  loginButton.addEventListener('click', login)
+}
+
 
 const epostInputField = document.getElementById('epost-field')
 const passwordInputField = document.getElementById('password-field')
@@ -48,10 +51,9 @@ async function login() {
 async function createUser() {
   const fornavn = fornavnInputField.value
   const epost = epostInputField.value
-  const password = passwordInputField.value
+  const passord = passwordInputField.value
   const etternavn = etternavnInputField.value
   const rolle = rolleInputField.value
-  const passord = passwordInputField.value
 
   try {
     const response = await fetch('/admin_create_user', {
@@ -61,7 +63,7 @@ async function createUser() {
       },
       body: JSON.stringify({
         Fornavn: fornavn,
-        Etternavn: password,
+        Etternavn: etternavn,
         Epost: epost,
         Rolle: rolle,
         Passord: passord,
@@ -71,9 +73,10 @@ async function createUser() {
     console.log("Parsed responseData:", responseData)
 
     if (responseData.message === 'Bruker er opprettet!') {
+      alert(responseData.message)
     } 
     else {
-      alert('Feil ved innlogging: ' + (responseData.error || 'Ukjent feil'))
+      alert('Feil ved opprettelse av bruker: ' + (responseData.error || 'Ukjent feil'))
     }
   } catch (error) {
     alert('Feil ved opprettelse av bruker: ' + error.message)

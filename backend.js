@@ -9,6 +9,7 @@ const cookieParser = require('cookie-parser')
 require('dotenv').config()
 app.use(cookieParser())
 app.use(express.json())
+const saltRounds = 10;
 
 app.use(express.static(path.join(__dirname, 'static')))
 
@@ -17,23 +18,23 @@ app.listen(port, () => {
   })
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname,('static/index.html')))
+  res.sendFile(path.join(__dirname,'static/index.html'))
 })
 
 app.get('/adminpanel', (req, res) => {
-  res.sendFile(path.join(__dirname,('static/admin.html')))
+  res.sendFile(path.join(__dirname,'static/admin.html'))
 })
 
-app.get('/backend.js', (req, res) => {
-  res.sendFile(path.join(__dirname,('frontend.js')))
+app.get('/frontend.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend.js'))
 })
 
 app.get('/mine_utlaan', (req, res) => {
-  res.sendFile(path.join(__dirname,('static/my_loans.html')))
+  res.sendFile(path.join(__dirname,'static/my_loans.html'))
 })
 
 app.get('/administrer_brukere', (req, res) => {
-  res.sendFile(path.join(__dirname,('static/administer_users.html')))
+  res.sendFile(path.join(__dirname,'static/administer_users.html'))
 })
 
 
@@ -55,11 +56,11 @@ database.connect((err) => {
       fornavn varchar(100) not null,
       etternavn varchar (100) not null,
       epost varchar (100) not null,
-      rolle enum('student', 'laerer', 'it', 'administrator') not null,
+      rolle enum('student', 'lærer', 'it', 'administrator') not null,
       passord varchar(200) default null ,
       CHECK (
         (rolle IN ('it', 'administrator') AND passord IS NOT NULL) OR
-        (rolle IN ('student', 'laerer') AND passord IS NULL)
+        (rolle IN ('student', 'lærer') AND passord IS NULL)
       )
     )`
     database.query(createBrukerTable)
@@ -106,5 +107,41 @@ app.post('/login', (req, res) => {
     })
   
     res.json({ message: 'Innlogging vellykket', bruker:  { rolle: bruker.rolle}})
+  })
+})
+
+app.post('/admin_create_user', (req, res) => {
+  const { Fornavn, Etternavn, Epost, Rolle, Passord } = req.body
+  console.log(req.body)
+
+
+  database.query(`select * from brukere where epost = ?`, [Epost], (err, results) => {
+    if (err) {
+      console.error('Feil ved sjekk av e-post:', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    }
+    if (results.length > 0) {
+      res.status(401).json({ error: 'E-post er allerede i bruk. Bruker ikke opprettet.'})
+    }
+    else {
+      if (Rolle == 'it' || Rolle == 'administrator') {
+        bcrypt.genSalt(saltRounds, function(err, salt) {
+          
+          bcrypt.hash(Passord, salt, function(err, hash) {
+    
+            const query = `insert into brukere (fornavn, etternavn, epost, rolle, passord) values (?, ?, ?, ?, ?)`
+            database.execute(query, [Fornavn, Etternavn, Epost, Rolle, hash], async (err, results) => {
+              res.json({ message: 'Bruker er opprettet!'})
+            })
+          })
+        })
+      }
+      else if (Rolle == 'student' || Rolle == 'lærer') {
+        const query = `insert into brukere (fornavn, etternavn, epost, rolle) values (?, ?, ?, ?)`
+        database.execute(query, [Fornavn, Etternavn, Epost, Rolle], async (err, results) => {
+          res.json({ message: 'Bruker er opprettet!'})
+        })
+      }
+    }
   })
 })
