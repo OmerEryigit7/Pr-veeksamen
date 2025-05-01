@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname,'static/index.html'))
 })
 
-app.get('/adminpanel', (req, res) => {
+app.get('/adminpanel', authenticateToken, ifAdmin(), (req, res) => {
   res.sendFile(path.join(__dirname,'static/admin.html'))
 })
 
@@ -29,11 +29,11 @@ app.get('/frontend.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend.js'))
 })
 
-app.get('/mine_utlaan', (req, res) => {
+app.get('/mine_utlaan', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname,'static/my_loans.html'))
 })
 
-app.get('/administrer_brukere', (req, res) => {
+app.get('/administrer_brukere', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname,'static/administer_users.html'))
 })
 
@@ -96,24 +96,22 @@ app.post('/login', (req, res) => {
     const token = jwt.sign(
       { id: bruker.id, epost: bruker.epost, rolle: bruker.rolle }, 
       process.env.JWT_SECRET, 
-      { expiresIn: '1h' }
+      { expiresIn: '1h' },
     )
-  
+
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV == 'production',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000 //en time
     })
-  
     res.json({ message: 'Innlogging vellykket', bruker:  { rolle: bruker.rolle}})
+
   })
 })
 
-app.post('/admin_create_user', (req, res) => {
+app.post('/admin_create_user', authenticateToken, ifAdmin(), (req, res) => {
   const { Fornavn, Etternavn, Epost, Rolle, Passord } = req.body
-  console.log(req.body)
-
 
   database.query(`select * from brukere where epost = ?`, [Epost], (err, results) => {
     if (err) {
@@ -145,3 +143,40 @@ app.post('/admin_create_user', (req, res) => {
     }
   })
 })
+
+function authenticateToken(req, res, next) {
+  const token = req.cookies.token;
+  console.log(req.cookies.token)
+  if (!token) {
+    return res.redirect('/')
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error("Token verification error:", err)
+      return res.redirect('/')
+    }
+    req.user = user;
+    next()
+  })
+}
+
+function ifAdmin() {
+  return (req, res, next) => {
+    if (req.user.rolle === 'administrator') {
+      return next()
+    } else {
+      return res.redirect('/mine_utlaan')
+    }
+  }
+}
+
+function isAdminOrIT() {
+  return (req, res, next) => {
+    if (req.user.rolle === 'it' || req.user.rolle === 'administrator') {
+      return next()
+    } else {
+      return res.redirect('/mine_utlaan')
+    }
+  }
+}

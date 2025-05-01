@@ -3,11 +3,10 @@ if (loginButton) {
   loginButton.addEventListener('click', login)
 }
 
-
 const epostInputField = document.getElementById('epost-field')
 const passwordInputField = document.getElementById('password-field')
 const adminOpprettBrukerButton = document.getElementById('admin-opprett-bruker-button')
-adminOpprettBrukerButton.addEventListener('click', createUser)
+adminOpprettBrukerButton.addEventListener('click', auth)
 
 const etternavnInputField = document.getElementById('etternavn-field')
 const rolleInputField = document.getElementById('rolle-field')
@@ -31,6 +30,9 @@ async function login() {
 
     const responseData = await response.json()
     console.log("Parsed responseData:", responseData)
+    if (responseData.token) {
+      localStorage.setItem('token', responseData.token)
+    }
 
     if (responseData.message === 'Innlogging vellykket') {
       alert('Innlogging vellykket!')
