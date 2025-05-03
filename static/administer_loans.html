@@ -13,14 +13,22 @@
         </div>
         <div id="navbar">
             <a href="administrer_brukere">Administrer brukere</a>
-            <a href="administrer_utlaan">Utlån</a>
-            <a href="administrer_utstyr">utsyr</a>
+            <a>Utlån</a>
             <a>Logg ut</a>
         </div>
     </div>
     <div>
         <div id="main-content">
-            <h1>Velkommen til adminpanelet!</h1>
+            <div id="flex-flow-column">
+                <div>
+                    <h1>Søk etter bruker</h1>
+                    <p>Fornavn, etternavn, eller e-post:</p>
+                    <input id="bruker-search-field" type="text">
+                    <button id="find-user">Finn bruker</button>
+                </div>
+                <div id="user-list">
+                </div>
+            </div>
         </div>
     </div>
     <script src="frontend.js"></script>

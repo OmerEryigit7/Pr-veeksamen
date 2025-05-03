@@ -5,7 +5,7 @@ const mysql = require('mysql2')
 const jwt = require('jsonwebtoken')
 const app = express()
 const bcrypt = require('bcrypt')
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 require('dotenv').config()
 app.use(cookieParser())
 app.use(express.json())
@@ -37,6 +37,14 @@ app.get('/administrer_brukere', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname,'static/administer_users.html'))
 })
 
+app.get('/administrer_utlaan', authenticateToken, ifAdminOrIT(), (req, res) => {
+  res.sendFile(path.join(__dirname,'static/administer_loans.html'))
+})
+
+app.get('/administrer_utstyr', authenticateToken, ifAdminOrIT(), (req, res) => {
+  res.sendFile(path.join(__dirname,'static/administer_equipment.html'))
+})
+
 
 let database = mysql.createConnection({
   host: process.env.HOST,
@@ -55,7 +63,7 @@ database.connect((err) => {
       id int not null auto_increment primary key,
       fornavn varchar(100) not null,
       etternavn varchar (100) not null,
-      epost varchar (100) not null,
+      epost varchar (100) unique not null,
       rolle enum('student', 'lærer', 'it', 'administrator') not null,
       passord varchar(200) default null ,
       CHECK (
@@ -69,6 +77,7 @@ database.connect((err) => {
     `create table if not exists utstyr (
       id varchar(100) not null primary key,
       type enum('datamaskin', 'mikrofon', 'hodetelefon', 'kamera', 'annet utstyr') not null,
+      model varchar (100) not null,
       laant_av int default null,
       foreign key (laant_av) references brukere (id)
     )`
@@ -144,6 +153,42 @@ app.post('/admin_create_user', authenticateToken, ifAdmin(), (req, res) => {
   })
 })
 
+app.post('/register_equipment', (req, res) => {
+  console.log('heihei')
+  const {Id, Type, Modell} = req.body
+  database.query(`select * from utstyr where id = ?`, [Id], (err, results)=> {
+    if (err) {
+      console.error('Feil ved registrering av utstyr', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    }
+    if (results.length > 0) {
+      res.status(401).json({ error: 'Serienummer er allerede i bruk. Utstyr er ikke registrert'})
+    }
+    else {
+      const query = `insert into utstyr (id, type, model) values (?, ?, ?)`
+        database.execute(query, [Id, Type, Modell], async (err, results) => {
+          res.json({ message: 'Utstyr er registrert!'})
+        })
+    }
+  })
+})
+
+
+app.post('/find_user', (req, res) => {
+  console.log('heihei')
+  const {brukerSearchValue} = req.body
+  database.query(`select * from brukere where id = ? or fornavn = ? or etternavn = ?`, [brukerSearchValue, brukerSearchValue, brukerSearchValue], (err, results)=> {
+    if (err) {
+      console.error('Feil ved spørring', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    }
+    else {
+      res.json({ message:'Fant brukere', results })
+      console.log(results)
+    }
+  })
+})
+
 function authenticateToken(req, res, next) {
   const token = req.cookies.token;
   console.log(req.cookies.token)
@@ -171,7 +216,7 @@ function ifAdmin() {
   }
 }
 
-function isAdminOrIT() {
+function ifAdminOrIT() {
   return (req, res, next) => {
     if (req.user.rolle === 'it' || req.user.rolle === 'administrator') {
       return next()
