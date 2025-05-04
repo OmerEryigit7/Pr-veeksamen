@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const app = express()
 const bcrypt = require('bcrypt')
 const cookieParser = require('cookie-parser');
+const e = require('express');
 require('dotenv').config()
 app.use(cookieParser())
 app.use(express.json())
@@ -33,7 +34,7 @@ app.get('/mine_utlaan', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname,'static/my_loans.html'))
 })
 
-app.get('/administrer_brukere', authenticateToken, (req, res) => {
+app.get('/administrer_brukere', authenticateToken, ifAdmin(), (req, res) => {
   res.sendFile(path.join(__dirname,'static/administer_users.html'))
 })
 
@@ -153,7 +154,7 @@ app.post('/admin_create_user', authenticateToken, ifAdmin(), (req, res) => {
   })
 })
 
-app.post('/register_equipment', (req, res) => {
+app.post('/register_equipment', authenticateToken, ifAdminOrIT(), (req, res) => {
   console.log('heihei')
   const {Id, Type, Modell} = req.body
   database.query(`select * from utstyr where id = ?`, [Id], (err, results)=> {
@@ -173,17 +174,81 @@ app.post('/register_equipment', (req, res) => {
   })
 })
 
+app.post('/loan_equipment_to_users', authenticateToken, ifAdminOrIT(), (req, res) => {
+  const {brukerId, equipmentId} = req.body
+  database.query(`select * from utstyr where id = ? and laant_av is null`, [equipmentId], (err, results)=> {
+    if (err) {
+      console.error('Feil ved søk av utstyr', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    } if (results.length < 1) {
+      res.status(404).json({ error: 'Utsyr finnes enten ikke, eller er allerede lånt til noen andre.'})
+    } else {
+      
+      database.query(`select * from brukere where id = ?`, [brukerId], (err, results) => {
+        if (err) {
+          console.error('Feil ved søk av bruker')
+          return res.status(500).json({ error: 'Databasefeil' })
+        } if (results.length < 1) {
+          res.status(401).json({ error: 'bruker kunne ikke finnes.'})
+        } else {
+          const query = `update utstyr set laant_av = ? where id = ?`
+          database.execute(query, [brukerId, equipmentId], async (err) => {
+            
+            res.json({ message: 'Utlån er registrert', results})
+            console.log(results)
+          })
+        }
+      })
+    
+    }
+  })
+})
 
-app.post('/find_user', (req, res) => {
+app.post('/return_loaned_equipment_from_users', authenticateToken, ifAdminOrIT(), (req, res) => {
+  const {brukerId, equipmentId} = req.body
+  database.query(`select * from utstyr where id = ? and laant_av = ?`, [equipmentId, brukerId], (err, results)=> {
+    if (err) {
+      console.error('Feil ved søk av utstyr', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    } if (results.length < 1) {
+      res.status(404).json({ error: 'Finner ikke utlån. Utstyr er enten lånt av noen andre eller finnes ikke'})
+    } else {
+      const query = `update utstyr set laant_av = null where id = ?`
+      database.execute(query, [equipmentId], async (err) => {
+            
+      res.json({ message: 'Utstyr er levert', results})
+      console.log(results)
+      })
+    }
+  })    
+})
+
+
+app.post('/find_user', authenticateToken, ifAdminOrIT(), (req, res) => {
   console.log('heihei')
   const {brukerSearchValue} = req.body
-  database.query(`select * from brukere where id = ? or fornavn = ? or etternavn = ?`, [brukerSearchValue, brukerSearchValue, brukerSearchValue], (err, results)=> {
+  database.query(`select * from brukere where id = ? or fornavn = ? or etternavn = ? or epost = ?`, [brukerSearchValue, brukerSearchValue, brukerSearchValue, brukerSearchValue], (err, results)=> {
     if (err) {
       console.error('Feil ved spørring', err)
       return res.status(500).json({ error: 'Databasefeil' })
     }
     else {
       res.json({ message:'Fant brukere', results })
+      console.log(results)
+    }
+  })
+})
+
+app.post('/find_equipment', authenticateToken, ifAdminOrIT(), (req, res) => {
+  console.log('heihei')
+  const {equipmentSearchValue} = req.body
+  database.query(`select * from utstyr where id = ? or model = ? or laant_av or type = ?`, [equipmentSearchValue, equipmentSearchValue, equipmentSearchValue, equipmentSearchValue], (err, results)=> {
+    if (err) {
+      console.error('Feil ved spørring', err)
+      return res.status(500).json({ error: 'Databasefeil' })
+    }
+    else {
+      res.json({ message:'Fant utstyr', results })
       console.log(results)
     }
   })

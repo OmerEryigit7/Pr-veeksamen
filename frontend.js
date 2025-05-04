@@ -14,6 +14,21 @@ if (findUserButton) {
   findUserButton.addEventListener('click', findUser)
 }
 
+const findEquipmentButton = document.getElementById('find-equipment')
+if (findEquipmentButton) {
+  findEquipmentButton.addEventListener('click', findEquipment)
+}
+
+const lendEquipmentButton = document.getElementById('lend-equipment-button')
+if (lendEquipmentButton) {
+  lendEquipmentButton.addEventListener('click', loanOutEquipment)
+}
+
+const returnEquipmentButton = document.getElementById('return-equipment-button')
+if (returnEquipmentButton) {
+  returnEquipmentButton.addEventListener('click', returnEquipment)
+}
+
 const epostInputField = document.getElementById('epost-field')
 const passwordInputField = document.getElementById('password-field')
 const adminOpprettBrukerButton = document.getElementById('admin-opprett-bruker-button')
@@ -135,7 +150,6 @@ async function findUser() {
   const brukerSearchValue = document.getElementById('bruker-search-field').value
 
   try {
-    console.log('asd')
 
     const response = await fetch('/find_user', {
       method: 'POST',
@@ -153,9 +167,9 @@ async function findUser() {
       const userList = document.getElementById('user-list')
       console.log(responseData.results.object)
       responseData.results.forEach((bruker) => {
-        const brukerDiv = document.createElement('div');
+        const brukerDiv = document.createElement('div')
         brukerDiv.textContent = `Id: ${bruker.id}, ${bruker.fornavn} ${bruker.etternavn} ${bruker.rolle} ${bruker.epost} `
-        userList.appendChild(brukerDiv);
+        userList.appendChild(brukerDiv)
       }) 
     } 
     else {
@@ -165,4 +179,99 @@ async function findUser() {
   } catch (error) {
     alert('Feil: ' + error.message)
   } 
+}
+
+async function findEquipment() {
+  const equipmentSearchValue = document.getElementById('equipment-search-field').value
+
+  try {
+
+    const response = await fetch('/find_equipment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        equipmentSearchValue: equipmentSearchValue,
+      }),
+    })
+    const responseData = await response.json()
+    console.log("Parsed responseData:", responseData)
+
+    if (responseData.message === 'Fant utstyr') {
+      const equipmentList = document.getElementById('equipment-list')
+      console.log(responseData.results.object)
+      responseData.results.forEach((equipment) => {
+        const equipmentDiv = document.createElement('div')
+        equipmentDiv.textContent = `Id: ${equipment.id}, ${equipment.type} ${equipment.model} ${equipment.laant_av}`
+        equipmentList.appendChild(equipmentDiv)
+      }) 
+    } 
+    else {
+      alert('Fant ingen brukere ' + (responseData.error || 'Ukjent feil'))
+    }
+
+  } catch (error) {
+    alert('Feil: ' + error.message)
+  } 
+}
+
+async function loanOutEquipment() {
+  const brukerId = document.getElementById('brukerIdInput').value
+  const equipmentId = document.getElementById('equipmentIdInput').value
+
+  try {
+    const response = await fetch('/loan_equipment_to_users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brukerId: brukerId,
+        equipmentId: equipmentId,
+      }),
+    })
+
+    const responseData = await response.json()
+    console.log("Parsed responseData:", responseData)
+
+    if (responseData.message === 'Utlån er registrert') {
+      alert('Utlån registrert')
+    } else {
+      alert('Feil: ' + (responseData.error || 'Ukjent feil'))
+    }
+
+  } catch (error) {
+    alert('Feil: ' + error.message)
+  }
+}
+
+async function returnEquipment() {
+  const brukerId = document.getElementById('brukerIdReturnInput').value
+  const equipmentId = document.getElementById('equipmentIdReturnInput').value
+
+  try {
+    const response = await fetch('/return_loaned_equipment_from_users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brukerId: brukerId,
+        equipmentId: equipmentId,
+      }),
+    })
+
+    const responseData = await response.json()
+    console.log("Parsed responseData:", responseData)
+
+    if (responseData.message === 'Utstyr er levert') {
+      alert('Utstyr er levert')
+    } else {
+      alert('Feil: ' + (responseData.error || 'Ukjent feil'))
+    }
+
+  } catch (error) {
+    alert('Feil: ' + error.message)
+  }
 }

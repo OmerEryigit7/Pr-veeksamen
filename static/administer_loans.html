@@ -13,7 +13,8 @@
         </div>
         <div id="navbar">
             <a href="administrer_brukere">Administrer brukere</a>
-            <a>Utlån</a>
+            <a href="administrer_utlaan">Utlån</a>
+            <a href="administrer_utstyr">Utsyr</a>
             <a>Logg ut</a>
         </div>
     </div>
@@ -21,12 +22,38 @@
         <div id="main-content">
             <div id="flex-flow-column">
                 <div>
-                    <h1>Søk etter bruker</h1>
-                    <p>Fornavn, etternavn, eller e-post:</p>
-                    <input id="bruker-search-field" type="text">
-                    <button id="find-user">Finn bruker</button>
-                </div>
-                <div id="user-list">
+                    <div>
+                        <h1>Søk etter bruker</h1>
+                        <p>Fornavn, etternavn, eller e-post:</p>
+                        <input id="bruker-search-field" type="text">
+                        <button id="find-user">Finn bruker</button>
+                    </div>
+                    <div id="user-list">
+                    </div>
+                    <div>
+                        <h1>Søk etter utstyr</h1>
+                        <p>Modell, type utstyr, serienummer, eller låntaker</p>
+                        <input id="equipment-search-field" type="text">
+                        <button id="find-equipment">Finn bruker</button>
+                    </div>
+                    <div id="equipment-list">
+                    </div>
+                    <div>
+                        <h1>Lån ut utstyr</h1>
+                        <p>Bruker id</p>
+                        <input type="text" id="brukerIdInput">
+                        <p>Utstyr id</p>
+                        <input type="text" id="equipmentIdInput">
+                        <button id="lend-equipment-button">Lån ut utstyr</button>
+                    </div>
+                    <div>
+                        <h1>Lever utstyr</h1>
+                        <p>Bruker id</p>
+                        <input type="text" id="brukerIdReturnInput">
+                        <p>Utstyr id</p>
+                        <input type="text" id="equipmentIdReturnInput">
+                        <button id="return-equipment-button">Lever utstyr</button>
+                    </div>
                 </div>
             </div>
         </div>
